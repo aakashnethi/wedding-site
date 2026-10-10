@@ -238,6 +238,58 @@
 
   footer { text-align: center; color: var(--muted); padding: 40px 0 56px; font-family: "Cormorant Garamond", serif; font-size: 1.2rem; font-style: italic; }
 
+  /* ---------- Creative touches ---------- */
+  .mandala {
+    position: absolute; top: 50%; left: 50%; width: min(120vw, 780px); aspect-ratio: 1;
+    opacity: .14; pointer-events: none; z-index: -1;
+    animation: spin-centered 90s linear infinite;
+  }
+  @keyframes spin-centered {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to   { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+
+  .couple { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .couple-card {
+    position: relative; text-align: center; padding: 32px 22px;
+    background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+  }
+  .couple-card .avatar {
+    width: 88px; height: 88px; margin: 0 auto 14px; border-radius: 50%;
+    display: grid; place-items: center; color: #fff;
+    font-family: "Cormorant Garamond", serif; font-size: 2.4rem;
+    background: linear-gradient(135deg, var(--marigold), var(--rose));
+    box-shadow: 0 12px 26px -12px var(--rose);
+    animation: float 6s ease-in-out infinite;
+  }
+  .couple-card:nth-child(2) .avatar { animation-delay: -3s; }
+  @keyframes float { 50% { transform: translateY(-8px); } }
+  .couple-card h3 { font-size: 1.8rem; }
+  .couple-card .role { text-transform: uppercase; letter-spacing: .18em; font-size: .72rem; color: var(--rose); margin: 4px 0 10px; font-weight: 600; }
+  .couple-card p:last-child { margin: 0; color: var(--muted); font-size: .95rem; }
+
+  /* Soft spotlight that follows the cursor (set by JS) */
+  .glow { position: relative; isolation: isolate; }
+  .glow::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1;
+    background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgba(233, 162, 59, .22), transparent 60%);
+    opacity: 0; transition: opacity .4s;
+  }
+  .glow:hover::after { opacity: 1; }
+
+  .cal-btn {
+    margin-top: 14px; display: inline-flex; align-items: center; gap: 8px;
+    font: inherit; font-size: .85rem; color: var(--maroon); background: none;
+    border: 1.5px solid var(--maroon); border-radius: 999px; padding: 6px 14px; cursor: pointer;
+    transition: background .3s, color .3s, transform .3s var(--ease);
+  }
+  .cal-btn:hover { background: var(--maroon); color: #fff; transform: translateY(-2px); }
+
+  @media (max-width: 480px) {
+    .couple { grid-template-columns: 1fr; }
+  }
+
   /* ---------- Decoration ---------- */
   .petal {
     position: fixed; top: -40px; z-index: -1; pointer-events: none;
@@ -275,6 +327,24 @@
 <main>
 
   <header class="hero">
+    <svg class="mandala" viewBox="0 0 200 200" aria-hidden="true">
+      <g fill="none" stroke="#6b1f2e" stroke-width=".6">
+        <circle cx="100" cy="100" r="96"/>
+        <circle cx="100" cy="100" r="78"/>
+        <circle cx="100" cy="100" r="54"/>
+        <g id="petals">
+          <ellipse cx="100" cy="62" rx="14" ry="28"/>
+          <ellipse cx="100" cy="62" rx="14" ry="28" transform="rotate(45 100 100)"/>
+          <ellipse cx="100" cy="62" rx="14" ry="28" transform="rotate(90 100 100)"/>
+          <ellipse cx="100" cy="62" rx="14" ry="28" transform="rotate(135 100 100)"/>
+          <ellipse cx="100" cy="62" rx="14" ry="28" transform="rotate(180 100 100)"/>
+          <ellipse cx="100" cy="62" rx="14" ry="28" transform="rotate(225 100 100)"/>
+          <ellipse cx="100" cy="62" rx="14" ry="28" transform="rotate(270 100 100)"/>
+          <ellipse cx="100" cy="62" rx="14" ry="28" transform="rotate(315 100 100)"/>
+        </g>
+        <circle cx="100" cy="100" r="18"/>
+      </g>
+    </svg>
     <div class="eyebrow reveal">Together with their families</div>
     <h1 class="reveal" id="couple">Rishika <span class="amp">&amp;</span> Akshay</h1>
     <div class="dates reveal">23 – 27 December 2026</div>
@@ -290,23 +360,44 @@
 
   <section>
     <div class="section-head reveal">
+      <div class="eyebrow">Two families, one story</div>
+      <h2>The couple</h2>
+    </div>
+    <div class="couple">
+      <article class="couple-card reveal glow">
+        <div class="avatar">R</div>
+        <h3>Rishika</h3>
+        <div class="role">The Bride</div>
+        <p>A few words about Rishika coming soon.</p>
+      </article>
+      <article class="couple-card reveal glow">
+        <div class="avatar">A</div>
+        <h3>Akshay</h3>
+        <div class="role">The Groom</div>
+        <p>A few words about Akshay coming soon.</p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head reveal">
       <div class="eyebrow">The Celebrations</div>
       <h2>Five days of joy</h2>
     </div>
     <div class="events">
-      <div class="event reveal">
+      <div class="event reveal glow">
         <div class="when">Wednesday · 23 December 2026</div>
         <h3>Engagement</h3>
         <p>Time and venue to be announced</p>
         <span class="pill">Time TBC · Venue TBC</span>
       </div>
-      <div class="event reveal">
+      <div class="event reveal glow">
         <div class="when">Friday · 25 December 2026</div>
         <h3>Haldi &amp; Sangeet</h3>
         <p>Turmeric, music, and dancing</p>
         <span class="pill">Time TBC · Venue TBC</span>
       </div>
-      <div class="event reveal">
+      <div class="event reveal glow">
         <div class="when">Sunday · 27 December 2026</div>
         <h3>Wedding</h3>
         <p>The ceremony, then dinner and celebration</p>
@@ -404,6 +495,12 @@
     endpoint: "PASTE_APPS_SCRIPT_URL_HERE",
     couple: "Rishika & Akshay",
     countdownTo: new Date(2026, 11, 23, 0, 0, 0), // 23 December 2026, local time
+    // Used for the "Add to calendar" buttons, in the same order as the event cards.
+    events: [
+      { title: "Engagement — Rishika & Akshay", date: "20261223" },
+      { title: "Haldi & Sangeet — Rishika & Akshay", date: "20261225" },
+      { title: "Wedding — Rishika & Akshay", date: "20261227" },
+    ],
   };
 
   const $ = id => document.getElementById(id);
@@ -543,6 +640,52 @@
       submitBtn.classList.remove("loading");
       submitBtn.textContent = "Send RSVP";
     }
+  });
+
+  // Glow that follows the cursor on cards
+  if (!reduceMotion) {
+    document.querySelectorAll(".glow").forEach(el => {
+      el.addEventListener("pointermove", e => {
+        const r = el.getBoundingClientRect();
+        el.style.setProperty("--mx", `${e.clientX - r.left}px`);
+        el.style.setProperty("--my", `${e.clientY - r.top}px`);
+      });
+    });
+  }
+
+  // "Add to calendar" buttons (all-day .ics files, since times are still TBC)
+  function icsFor({ title, date }) {
+    const next = new Date(
+      Number(date.slice(0, 4)), Number(date.slice(4, 6)) - 1, Number(date.slice(6, 8)) + 1
+    );
+    const nextStr = `${next.getFullYear()}${String(next.getMonth() + 1).padStart(2, "0")}${String(next.getDate()).padStart(2, "0")}`;
+    return [
+      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Wedding Site//EN",
+      "BEGIN:VEVENT",
+      `UID:${date}-${title.replace(/\W/g, "")}@wedding-site`,
+      `DTSTAMP:${new Date().toISOString().replace(/[-:]|\.\d{3}/g, "")}`,
+      `DTSTART;VALUE=DATE:${date}`,
+      `DTEND;VALUE=DATE:${nextStr}`,
+      `SUMMARY:${title}`,
+      "END:VEVENT", "END:VCALENDAR",
+    ].join("\r\n");
+  }
+  document.querySelectorAll(".event").forEach((card, i) => {
+    const ev = CONFIG.events[i];
+    if (!ev) return;
+    const btn = document.createElement("button");
+    btn.className = "cal-btn";
+    btn.type = "button";
+    btn.textContent = "+ Add to calendar";
+    btn.addEventListener("click", () => {
+      const blob = new Blob([icsFor(ev)], { type: "text/calendar;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${ev.title.split(" —")[0].replace(/\W+/g, "-").toLowerCase()}.ics`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+    card.appendChild(btn);
   });
 
   // Gallery lightbox
