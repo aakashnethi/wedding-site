@@ -33,18 +33,90 @@ function doPost(e) {
   const events = (Array.isArray(data.events) ? data.events : [])
     .filter(ev => EVENTS.includes(ev));
 
+  const rsvp = {
+    name,
+    email: String(data.email || "").trim().slice(0, 120),
+    attending,
+    events: attending === "Yes" ? events.join(", ") : "",
+    guests: attending === "Yes" ? guests : 0,
+    note: String(data.note || "").slice(0, 500),
+    showName: data.showName ? "Yes" : "No",
+  };
+
   getSheet_().appendRow([
     new Date(),
-    name,
-    String(data.email || "").slice(0, 120),
-    attending,
-    attending === "Yes" ? events.join(", ") : "",
-    attending === "Yes" ? guests : 0,
-    String(data.note || "").slice(0, 500),
-    data.showName ? "Yes" : "No",
+    rsvp.name,
+    rsvp.email,
+    rsvp.attending,
+    rsvp.events,
+    rsvp.guests,
+    rsvp.note,
+    rsvp.showName,
   ]);
 
+  // A failed notification should never lose the RSVP, so errors are only logged.
+  try {
+    notify_(rsvp);
+  } catch (err) {
+    console.error("Notification failed: " + err);
+  }
+
   return json_({ ok: true });
+}
+
+// Sends the host an email and optional chat message for every RSVP, and a
+// confirmation to the guest when they gave a valid email address.
+//
+// Set these in Apps Script: Project Settings → Script Properties
+//   HOST_EMAILS  comma-separated addresses, e.g. "you@gmail.com,partner@gmail.com"
+//   WEBHOOK_URL  optional Slack or Discord incoming webhook URL
+function notify_(rsvp) {
+  const props = PropertiesService.getScriptProperties();
+  const hostEmails = props.getProperty("HOST_EMAILS");
+  const webhook = props.getProperty("WEBHOOK_URL");
+
+  const attendingText = rsvp.attending === "Yes"
+    ? `${rsvp.guests} guest(s) attending: ${rsvp.events || "no events selected"}`
+    : "Not attending";
+  const details = [
+    `Name: ${rsvp.name}`,
+    `Response: ${attendingText}`,
+    rsvp.email ? `Email: ${rsvp.email}` : null,
+    rsvp.note ? `Note: ${rsvp.note}` : null,
+    `Show name on guest list: ${rsvp.showName}`,
+  ].filter(Boolean).join("\n");
+
+  if (hostEmails) {
+    MailApp.sendEmail({
+      to: hostEmails,
+      subject: `RSVP: ${rsvp.name} (${rsvp.attending === "Yes" ? "attending" : "declined"})`,
+      body: `A new RSVP was received.\n\n${details}`,
+    });
+  }
+
+  if (webhook) {
+    const text = `New RSVP\n${details}`;
+    UrlFetchApp.fetch(webhook, {
+      method: "post",
+      contentType: "application/json",
+      payload: JSON.stringify({ text, content: text }), // Slack uses "text", Discord uses "content"
+      muteHttpExceptions: true,
+    });
+  }
+
+  if (rsvp.email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(rsvp.email)) {
+    const body = rsvp.attending === "Yes"
+      ? `Dear ${rsvp.name},\n\nThank you for your RSVP. We look forward to celebrating with you on:\n` +
+        `${rsvp.events || "the events you selected"}\n\n` +
+        `Guests: ${rsvp.guests}\n\nWith love,\nRishika & Akshay`
+      : `Dear ${rsvp.name},\n\nThank you for letting us know. We'll miss you, and we hope to see you soon.\n\n` +
+        `With love,\nRishika & Akshay`;
+    MailApp.sendEmail({
+      to: rsvp.email,
+      subject: "Thank you for your RSVP — Rishika & Akshay",
+      body,
+    });
+  }
 }
 
 // Public data only: headcounts per event (anonymous guests included in the
