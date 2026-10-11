@@ -12,7 +12,7 @@
 
 const SHEET_NAME = "RSVPs";
 // New columns are added at the end so existing rows and the guest-list reader stay aligned.
-const HEADERS = ["Timestamp", "Name", "Email", "Attending", "Events", "Guests", "Note", "Show name", "Phone", "Text OK"];
+const HEADERS = ["Timestamp", "Name", "Email", "Attending", "Events", "Guests", "Note", "Show name", "Phone", "Text OK", "Meal"];
 const EVENTS = ["Engagement", "Haldi & Sangeet", "Wedding"];
 
 function getSheet_() {
@@ -25,6 +25,7 @@ function getSheet_() {
 
 function doPost(e) {
   const data = JSON.parse(e.postData.contents);
+  if (data.type === "photo") return savePhoto_(data);
 
   const name = String(data.name || "").trim().slice(0, 80);
   if (!name) return json_({ ok: false, error: "Name required" });
@@ -44,6 +45,7 @@ function doPost(e) {
     showName: data.showName ? "Yes" : "No",
     phone: normalizePhone_(data.phone),
     textOk: data.textOk && normalizePhone_(data.phone) ? "Yes" : "No",
+    meal: data.meal === "Non-Veg" ? "Non-Veg" : "Veg",
   };
 
   getSheet_().appendRow([
@@ -57,6 +59,7 @@ function doPost(e) {
     rsvp.showName,
     rsvp.phone,
     rsvp.textOk,
+    rsvp.meal,
   ]);
 
   // A failed notification should never lose the RSVP, so errors are only logged.
@@ -66,6 +69,26 @@ function doPost(e) {
     console.error("Notification failed: " + err);
   }
 
+  return json_({ ok: true });
+}
+
+// Saves one guest photo as a JPEG in the Drive folder named by PHOTOS_FOLDER_ID.
+// Photos are capped at 5 MB, and the event name goes into the file name.
+function savePhoto_(data) {
+  const folderId = PropertiesService.getScriptProperties().getProperty("PHOTOS_FOLDER_ID");
+  if (!folderId) return json_({ ok: false, error: "Photo folder not configured" });
+
+  const bytes = Utilities.base64Decode(String(data.data || ""));
+  if (!bytes.length || bytes.length > 5 * 1024 * 1024) {
+    return json_({ ok: false, error: "Photo missing or too large" });
+  }
+
+  const event = EVENTS.includes(data.event) ? data.event : "Other";
+  const uploader = String(data.name || "guest").replace(/[^\w ]/g, "").trim().slice(0, 40) || "guest";
+  const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyyMMdd-HHmmss");
+  const blob = Utilities.newBlob(bytes, "image/jpeg", `${event} - ${uploader} - ${stamp}.jpg`);
+
+  DriveApp.getFolderById(folderId).createFile(blob);
   return json_({ ok: true });
 }
 

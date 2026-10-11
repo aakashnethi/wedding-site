@@ -161,7 +161,7 @@
     box-shadow: 0 30px 60px -30px rgba(107, 31, 46, .25);
   }
   label.field { display: block; margin: 18px 0 8px; font-size: .88rem; color: var(--muted); font-weight: 500; }
-  input[type="text"], input[type="email"], select, textarea {
+  input[type="text"], input[type="email"], input[type="tel"], select, textarea {
     width: 100%; font: inherit; font-size: 1rem; color: var(--ink);
     background: rgba(255, 255, 255, .8); border: 1.5px solid var(--line); border-radius: 12px;
     padding: 12px 14px; transition: border-color .25s, box-shadow .25s;
@@ -170,6 +170,13 @@
     outline: none; border-color: var(--rose); box-shadow: 0 0 0 4px rgba(201, 86, 107, .15);
   }
   textarea { min-height: 84px; resize: vertical; }
+  input[type="file"] {
+    width: 100%; font: inherit; color: var(--muted); padding: 10px 0;
+  }
+  input[type="file"]::file-selector-button {
+    font: inherit; color: var(--maroon); background: rgba(233, 162, 59, .18);
+    border: none; border-radius: 999px; padding: 8px 16px; margin-right: 12px; cursor: pointer;
+  }
 
   .segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; position: relative; }
   .segmented input { position: absolute; opacity: 0; pointer-events: none; }
@@ -429,6 +436,31 @@
     </div>
   </section>
 
+  <section>
+    <div class="section-head reveal">
+      <div class="eyebrow">During the celebrations</div>
+      <h2>Share your photos</h2>
+    </div>
+    <form class="card reveal" id="upload">
+      <label class="field" for="photoName">Your name (optional)</label>
+      <input type="text" id="photoName" maxlength="40">
+
+      <label class="field" for="photoEvent">Which event?</label>
+      <select id="photoEvent">
+        <option>Engagement</option>
+        <option>Haldi &amp; Sangeet</option>
+        <option>Wedding</option>
+        <option>Other</option>
+      </select>
+
+      <label class="field" for="photos">Choose up to 10 photos</label>
+      <input type="file" id="photos" accept="image/*" multiple>
+
+      <button type="submit" class="primary" id="uploadBtn">Upload photos</button>
+      <div class="status" id="uploadStatus" role="status"></div>
+    </form>
+  </section>
+
   <div class="lightbox" id="lightbox" aria-hidden="true"><img id="lightboxImg" alt=""></div>
 
   <section>
@@ -477,6 +509,12 @@
         <select id="guests" name="guests">
           <option value="1">1</option><option value="2" selected>2</option>
           <option value="3">3</option><option value="4">4</option>
+        </select>
+
+        <label class="field" for="meal">Meal preference</label>
+        <select id="meal" name="meal">
+          <option value="Veg">Veg</option>
+          <option value="Non-Veg">Non-Veg</option>
         </select>
 
         <label class="field" for="note">Dietary needs or a message (optional)</label>
@@ -632,6 +670,7 @@
       note: (fd.get("note") || "").trim(),
       showName: $("showName").checked,
       phone: (fd.get("phone") || "").trim(),
+      meal: fd.get("meal"),
       textOk: $("textOk").checked,
     };
     submitBtn.disabled = true;
@@ -708,6 +747,71 @@
       URL.revokeObjectURL(a.href);
     });
     card.appendChild(btn);
+  });
+
+  // Guest photo uploads: photos are resized in the browser before sending,
+  // which keeps each upload small.
+  const MAX_PHOTOS = 10;
+  function toJpegBase64(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const scale = Math.min(1, 1600 / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL("image/jpeg", 0.8).split(",")[1]);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Not an image")); };
+      img.src = url;
+    });
+  }
+
+  $("upload").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const statusEl2 = $("uploadStatus");
+    if (CONFIG.endpoint.startsWith("PASTE")) {
+      statusEl2.textContent = "Photo uploads aren't connected yet.";
+      return;
+    }
+    const files = [...$("photos").files].slice(0, MAX_PHOTOS);
+    if (!files.length) {
+      statusEl2.textContent = "Choose at least one photo.";
+      return;
+    }
+    const btn = $("uploadBtn");
+    btn.disabled = true;
+    let sent = 0;
+    for (const file of files) {
+      statusEl2.textContent = `Uploading ${sent + 1} of ${files.length}…`;
+      try {
+        const data = await toJpegBase64(file);
+        // Same no-cors caveat as the RSVP form: the page can't read the reply.
+        await fetch(CONFIG.endpoint, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            type: "photo",
+            event: $("photoEvent").value,
+            name: $("photoName").value.trim(),
+            data,
+          }),
+        });
+        sent++;
+      } catch (err) {
+        // Skip files the browser can't read, such as some HEIC images.
+      }
+    }
+    statusEl2.textContent = sent
+      ? `Thank you! ${sent} photo(s) sent to the couple.`
+      : "Those files couldn't be read. Please try JPG or PNG photos.";
+    statusEl2.classList.toggle("ok", sent > 0);
+    e.target.reset();
+    btn.disabled = false;
   });
 
   // Gallery lightbox
