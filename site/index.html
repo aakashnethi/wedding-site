@@ -444,6 +444,17 @@
         <label class="field" for="email">Email (optional, only the couple will see it)</label>
         <input type="email" id="email" name="email" maxlength="120" autocomplete="email">
 
+        <label class="field" for="phone">Phone (optional)</label>
+        <input type="tel" id="phone" name="phone" maxlength="20" autocomplete="tel" placeholder="+1 555 123 4567">
+
+        <label class="switch">
+          <input type="checkbox" id="textOk" name="textOk">
+          <span class="track"></span>
+          <span>OK to send me text messages
+            <small>Only for RSVP confirmations and wedding updates. Message rates may apply.</small>
+          </span>
+        </label>
+
         <label class="field">Will you attend?</label>
         <div class="segmented">
           <input type="radio" id="att-yes" name="attending" value="yes" checked>
@@ -620,6 +631,8 @@
       guests: Number(fd.get("guests")),
       note: (fd.get("note") || "").trim(),
       showName: $("showName").checked,
+      phone: (fd.get("phone") || "").trim(),
+      textOk: $("textOk").checked,
     };
     submitBtn.disabled = true;
     submitBtn.classList.add("loading");

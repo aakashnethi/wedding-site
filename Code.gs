@@ -11,7 +11,8 @@
 // of guests who chose to be public are ever sent to the website.
 
 const SHEET_NAME = "RSVPs";
-const HEADERS = ["Timestamp", "Name", "Email", "Attending", "Events", "Guests", "Note", "Show name"];
+// New columns are added at the end so existing rows and the guest-list reader stay aligned.
+const HEADERS = ["Timestamp", "Name", "Email", "Attending", "Events", "Guests", "Note", "Show name", "Phone", "Text OK"];
 const EVENTS = ["Engagement", "Haldi & Sangeet", "Wedding"];
 
 function getSheet_() {
@@ -41,6 +42,8 @@ function doPost(e) {
     guests: attending === "Yes" ? guests : 0,
     note: String(data.note || "").slice(0, 500),
     showName: data.showName ? "Yes" : "No",
+    phone: normalizePhone_(data.phone),
+    textOk: data.textOk && normalizePhone_(data.phone) ? "Yes" : "No",
   };
 
   getSheet_().appendRow([
@@ -52,6 +55,8 @@ function doPost(e) {
     rsvp.guests,
     rsvp.note,
     rsvp.showName,
+    rsvp.phone,
+    rsvp.textOk,
   ]);
 
   // A failed notification should never lose the RSVP, so errors are only logged.
@@ -64,16 +69,43 @@ function doPost(e) {
   return json_({ ok: true });
 }
 
+// Keeps digits and a leading "+". A 10-digit number is treated as a US number.
+function normalizePhone_(raw) {
+  const cleaned = String(raw || "").replace(/[^\d+]/g, "").slice(0, 20);
+  if (/^\d{10}$/.test(cleaned)) return "+1" + cleaned;
+  if (/^\+\d{8,15}$/.test(cleaned)) return cleaned;
+  return "";
+}
+
+// Sends one SMS through Twilio. Does nothing if Twilio isn't configured.
+function sendSms_(to, body) {
+  const props = PropertiesService.getScriptProperties();
+  const sid = props.getProperty("TWILIO_SID");
+  const token = props.getProperty("TWILIO_TOKEN");
+  const from = props.getProperty("TWILIO_FROM");
+  if (!sid || !token || !from || !to) return;
+
+  UrlFetchApp.fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+    method: "post",
+    payload: { To: to, From: from, Body: body },
+    headers: { Authorization: "Basic " + Utilities.base64Encode(sid + ":" + token) },
+    muteHttpExceptions: true,
+  });
+}
+
 // Sends the host an email and optional chat message for every RSVP, and a
 // confirmation to the guest when they gave a valid email address.
 //
 // Set these in Apps Script: Project Settings → Script Properties
-//   HOST_EMAILS  comma-separated addresses, e.g. "you@gmail.com,partner@gmail.com"
-//   WEBHOOK_URL  optional Slack or Discord incoming webhook URL
+//   HOST_EMAILS    comma-separated addresses, e.g. "you@gmail.com,partner@gmail.com"
+//   WEBHOOK_URL    optional Slack or Discord incoming webhook URL
+//   HOST_PHONES    optional comma-separated numbers to text, e.g. "+15551234567"
+//   TWILIO_SID, TWILIO_TOKEN, TWILIO_FROM   optional, to enable text messages
 function notify_(rsvp) {
   const props = PropertiesService.getScriptProperties();
   const hostEmails = props.getProperty("HOST_EMAILS");
   const webhook = props.getProperty("WEBHOOK_URL");
+  const hostPhones = props.getProperty("HOST_PHONES");
 
   const attendingText = rsvp.attending === "Yes"
     ? `${rsvp.guests} guest(s) attending: ${rsvp.events || "no events selected"}`
@@ -102,6 +134,20 @@ function notify_(rsvp) {
       payload: JSON.stringify({ text, content: text }), // Slack uses "text", Discord uses "content"
       muteHttpExceptions: true,
     });
+  }
+
+  const summaryText = `RSVP from ${rsvp.name}: ${rsvp.attending === "Yes" ? rsvp.guests + " attending (" + rsvp.events + ")" : "declined"}`;
+  if (hostPhones) {
+    hostPhones.split(",").map(p => normalizePhone_(p)).filter(Boolean)
+      .forEach(to => sendSms_(to, summaryText));
+  }
+
+  // Texts only go to guests who ticked "OK to send me text messages".
+  if (rsvp.textOk === "Yes") {
+    const body = rsvp.attending === "Yes"
+      ? `Thank you, ${rsvp.name}! We're excited to celebrate with you. — Rishika & Akshay`
+      : `Thank you for letting us know, ${rsvp.name}. We'll miss you. — Rishika & Akshay`;
+    sendSms_(rsvp.phone, body);
   }
 
   if (rsvp.email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(rsvp.email)) {
