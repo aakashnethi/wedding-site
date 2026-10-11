@@ -154,6 +154,28 @@
   @keyframes fade { from { opacity: 0; } }
   @media (max-width: 480px) { .gallery { gap: 8px; } }
 
+  /* ---------- Photo wall ---------- */
+  .wall-group { margin-bottom: 40px; }
+  .wall-tag {
+    font-size: 1.5rem; color: var(--maroon); margin-bottom: 14px;
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  .wall-tag small { font-family: "Inter", system-ui, sans-serif; font-size: .8rem; color: var(--muted); }
+  .wall-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .wall-item {
+    margin: 0; cursor: zoom-in; overflow: hidden; background: var(--card);
+    border: 1px solid var(--line); border-radius: 16px;
+    transition: transform .4s var(--ease), box-shadow .4s var(--ease);
+  }
+  .wall-item:hover { transform: translateY(-4px); box-shadow: 0 18px 36px -20px rgba(107, 31, 46, .4); }
+  .wall-item img {
+    width: 100%; aspect-ratio: 1; object-fit: cover; display: block;
+    background: linear-gradient(135deg, #f9d9c4, #f4c9d2 55%, #fbe3b0);
+  }
+  .wall-item figcaption { padding: 10px 12px; font-size: .9rem; }
+  .wall-item figcaption small { display: block; color: var(--muted); font-size: .75rem; }
+  .wall-empty { color: var(--muted); text-align: center; margin: 0; }
+
   /* ---------- RSVP ---------- */
   .card {
     background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
@@ -445,6 +467,12 @@
       <label class="field" for="photoName">Your name (optional)</label>
       <input type="text" id="photoName" maxlength="40">
 
+      <label class="field" for="photoTag">Hashtag (optional)</label>
+      <input type="text" id="photoTag" maxlength="30" placeholder="#RiCh">
+
+      <label class="field" for="photoCaption">Caption (optional)</label>
+      <input type="text" id="photoCaption" maxlength="140" placeholder="A moment to remember">
+
       <label class="field" for="photoEvent">Which event?</label>
       <select id="photoEvent">
         <option>Engagement</option>
@@ -459,6 +487,14 @@
       <button type="submit" class="primary" id="uploadBtn">Upload photos</button>
       <div class="status" id="uploadStatus" role="status"></div>
     </form>
+  </section>
+
+  <section>
+    <div class="section-head reveal">
+      <div class="eyebrow">Shared by guests</div>
+      <h2>The wall</h2>
+    </div>
+    <div id="wall"><p class="wall-empty">Loading photos…</p></div>
   </section>
 
   <div class="lightbox" id="lightbox" aria-hidden="true"><img id="lightboxImg" alt=""></div>
@@ -632,6 +668,46 @@
     setTimeout(() => box.remove(), 1400);
   }
 
+  // Groups photos by hashtag. Untagged photos go under "#moments".
+  function renderWall(photos = []) {
+    const wall = $("wall");
+    if (!photos.length) {
+      wall.innerHTML = '<p class="wall-empty">No photos yet. Be the first to share one above!</p>';
+      return;
+    }
+    const groups = new Map();
+    photos.forEach(p => {
+      const key = p.hashtag ? p.hashtag.toLowerCase() : "";
+      if (!groups.has(key)) {
+        groups.set(key, { label: p.hashtag ? `#${p.hashtag}` : "#moments", items: [] });
+      }
+      groups.get(key).items.push(p);
+    });
+    wall.innerHTML = [...groups.values()].map(g => `
+      <div class="wall-group">
+        <h3 class="wall-tag">${escapeHTML(g.label)} <small>${g.items.length} photo${g.items.length === 1 ? "" : "s"}</small></h3>
+        <div class="wall-grid">
+          ${g.items.map(p => `
+            <figure class="wall-item" data-full="${escapeHTML(p.url)}">
+              <img src="${escapeHTML(p.thumb)}" alt="${escapeHTML(p.caption || g.label)}" loading="lazy">
+              <figcaption>
+                ${p.caption ? escapeHTML(p.caption) : ""}
+                <small>${escapeHTML(p.uploader || "A guest")} · ${escapeHTML(p.event)}</small>
+              </figcaption>
+            </figure>`).join("")}
+        </div>
+      </div>`).join("");
+  }
+
+  // Opens a wall photo in the lightbox.
+  $("wall").addEventListener("click", (e) => {
+    const fig = e.target.closest(".wall-item");
+    if (!fig) return;
+    $("lightboxImg").src = fig.dataset.full;
+    lightbox.classList.add("open");
+    lightbox.setAttribute("aria-hidden", "false");
+  });
+
   async function loadGuests() {
     if (CONFIG.endpoint.startsWith("PASTE")) {
       totalsEl.textContent = "The guest list appears once the RSVP backend is connected.";
@@ -649,8 +725,10 @@
       listEl.innerHTML = data.named
         .map((n, i) => `<li style="animation-delay:${i * 60}ms">${escapeHTML(n.name)}<small>${escapeHTML(n.events.join(", "))}</small></li>`)
         .join("");
+      renderWall(data.photos);
     } catch (err) {
       totalsEl.textContent = "Could not load the guest list right now.";
+      $("wall").innerHTML = '<p class="wall-empty">Could not load photos right now.</p>';
     }
   }
 
@@ -798,6 +876,8 @@
             type: "photo",
             event: $("photoEvent").value,
             name: $("photoName").value.trim(),
+            hashtag: $("photoTag").value.trim(),
+            caption: $("photoCaption").value.trim(),
             data,
           }),
         });
@@ -812,6 +892,8 @@
     statusEl2.classList.toggle("ok", sent > 0);
     e.target.reset();
     btn.disabled = false;
+    // Give the sheet a moment to record the new photos, then refresh the wall.
+    if (sent) setTimeout(loadGuests, 3000);
   });
 
   // Gallery lightbox

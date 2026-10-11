@@ -23,6 +23,41 @@ function getSheet_() {
   return sheet;
 }
 
+const PHOTOS_SHEET = "Photos";
+const PHOTO_HEADERS = ["Timestamp", "Event", "Uploader", "Hashtag", "Caption", "File ID", "Show on site"];
+
+function getPhotosSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(PHOTOS_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(PHOTOS_SHEET);
+    sheet.appendRow(PHOTO_HEADERS);
+  }
+  return sheet;
+}
+
+// Hashtags are stored without "#" or spaces. "#RiCh" and "rich" group together.
+function normalizeTag_(raw) {
+  return String(raw || "").replace(/^#+/, "").replace(/[^A-Za-z0-9]/g, "").slice(0, 30);
+}
+
+// Photos the couple hasn't hidden. Drive thumbnail links work for files shared "anyone with the link".
+function publicPhotos_() {
+  const rows = getPhotosSheet_().getDataRange().getValues().slice(1);
+  return rows
+    .filter(r => r[5] && r[6] !== "No")
+    .slice(-200)
+    .map(([, event, uploader, hashtag, caption, fileId]) => ({
+      event,
+      uploader,
+      hashtag,
+      caption,
+      thumb: `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`,
+      url: `https://drive.google.com/thumbnail?id=${fileId}&sz=w1600`,
+    }))
+    .reverse();
+}
+
 function doPost(e) {
   const data = JSON.parse(e.postData.contents);
   if (data.type === "photo") return savePhoto_(data);
@@ -88,7 +123,13 @@ function savePhoto_(data) {
   const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyyMMdd-HHmmss");
   const blob = Utilities.newBlob(bytes, "image/jpeg", `${event} - ${uploader} - ${stamp}.jpg`);
 
-  DriveApp.getFolderById(folderId).createFile(blob);
+  const hashtag = normalizeTag_(data.hashtag);
+  const caption = String(data.caption || "").trim().slice(0, 140);
+
+  const file = DriveApp.getFolderById(folderId).createFile(blob);
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  getPhotosSheet_().appendRow([new Date(), event, uploader, hashtag, caption, file.getId(), "Yes"]);
+
   return json_({ ok: true });
 }
 
@@ -212,7 +253,7 @@ function doGet() {
     }
   });
 
-  return json_({ totalGuests, anonymousCount, perEvent, named });
+  return json_({ totalGuests, anonymousCount, perEvent, named, photos: publicPhotos_() });
 }
 
 function json_(obj) {
