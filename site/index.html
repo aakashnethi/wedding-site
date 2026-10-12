@@ -279,6 +279,40 @@
 
   footer { text-align: center; color: var(--muted); padding: 40px 0 56px; font-family: "Cormorant Garamond", serif; font-size: 1.2rem; font-style: italic; }
 
+  /* ---------- Navigation ---------- */
+  .topnav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 30;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 14px 20px; transition: background .4s, box-shadow .4s, padding .4s;
+  }
+  .topnav.scrolled {
+    background: rgba(253, 248, 241, .8); padding-top: 10px; padding-bottom: 10px;
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 1px 0 var(--line);
+  }
+  .brand {
+    font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 1.4rem;
+    color: var(--maroon); text-decoration: none; white-space: nowrap;
+  }
+  .navlinks {
+    display: flex; gap: 2px; list-style: none; margin: 0; padding: 4px; min-width: 0;
+    background: rgba(255, 255, 255, .55); border: 1px solid var(--line); border-radius: 999px;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .navlinks::-webkit-scrollbar { display: none; }
+  .navlinks a {
+    display: block; white-space: nowrap; font-size: .8rem; letter-spacing: .04em;
+    color: var(--muted); text-decoration: none; padding: 7px 13px; border-radius: 999px;
+    transition: background .3s, color .3s;
+  }
+  .navlinks a:hover { color: var(--maroon); }
+  .navlinks a.active { background: var(--maroon); color: #fff; }
+  section, header[id] { scroll-margin-top: 80px; }
+  @media (max-width: 720px) {
+    .topnav { flex-direction: column; align-items: stretch; gap: 8px; }
+    .brand { text-align: center; }
+  }
+
   /* ---------- Creative touches ---------- */
   .mandala {
     position: absolute; top: 50%; left: 50%; width: min(120vw, 780px); aspect-ratio: 1;
@@ -365,9 +399,22 @@
 </style>
 </head>
 <body>
+<nav class="topnav" id="topnav" aria-label="Sections">
+  <a href="#top" class="brand">R &amp; A</a>
+  <ul class="navlinks">
+    <li><a href="#about">Couple</a></li>
+    <li><a href="#schedule">Schedule</a></li>
+    <li><a href="#moments">Moments</a></li>
+    <li><a href="#share">Share</a></li>
+    <li><a href="#photo-wall">Wall</a></li>
+    <li><a href="#rsvp-section">RSVP</a></li>
+    <li><a href="#guest-list">Guests</a></li>
+  </ul>
+</nav>
+
 <main>
 
-  <header class="hero">
+  <header class="hero" id="top">
     <svg class="mandala" viewBox="0 0 200 200" aria-hidden="true">
       <g fill="none" stroke="#6b1f2e" stroke-width=".6">
         <circle cx="100" cy="100" r="96"/>
@@ -401,7 +448,7 @@
     <span class="scroll-cue" aria-hidden="true"></span>
   </header>
 
-  <section>
+  <section id="about">
     <div class="section-head reveal">
       <div class="eyebrow">Two families, one story</div>
       <h2>The couple</h2>
@@ -422,7 +469,7 @@
     </div>
   </section>
 
-  <section>
+  <section id="schedule">
     <div class="section-head reveal">
       <div class="eyebrow">The Celebrations</div>
       <h2>Five days of joy</h2>
@@ -449,7 +496,7 @@
     </div>
   </section>
 
-  <section>
+  <section id="moments">
     <div class="section-head reveal">
       <div class="eyebrow">Our story</div>
       <h2>Moments</h2>
@@ -463,7 +510,7 @@
     </div>
   </section>
 
-  <section>
+  <section id="share">
     <div class="section-head reveal">
       <div class="eyebrow">During the celebrations</div>
       <h2>Share your photos</h2>
@@ -494,7 +541,7 @@
     </form>
   </section>
 
-  <section>
+  <section id="photo-wall">
     <div class="section-head reveal">
       <div class="eyebrow">Shared by guests</div>
       <h2>The wall</h2>
@@ -504,7 +551,7 @@
 
   <div class="lightbox" id="lightbox" aria-hidden="true"><img id="lightboxImg" alt=""></div>
 
-  <section>
+  <section id="rsvp-section">
     <div class="section-head reveal">
       <div class="eyebrow">Kindly reply by 1 December 2026</div>
       <h2>RSVP</h2>
@@ -575,7 +622,7 @@
     </div>
   </section>
 
-  <section>
+  <section id="guest-list">
     <div class="section-head reveal">
       <div class="eyebrow">Who is coming</div>
       <h2>Guest list</h2>
@@ -924,6 +971,19 @@
     lightbox.classList.remove("open");
     lightbox.setAttribute("aria-hidden", "true");
   });
+
+  // Navigation: glass background after scrolling, and highlight the section in view.
+  const navLinks = document.querySelectorAll(".navlinks a");
+  const navObserver = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if (!en.isIntersecting) return;
+      navLinks.forEach(a => a.classList.toggle("active", a.getAttribute("href") === `#${en.target.id}`));
+    });
+  }, { rootMargin: "-45% 0px -50% 0px" });
+  document.querySelectorAll("section[id], header[id]").forEach(s => navObserver.observe(s));
+  window.addEventListener("scroll", () => {
+    $("topnav").classList.toggle("scrolled", window.scrollY > 40);
+  }, { passive: true });
 
   $("footerCouple").textContent = CONFIG.couple;
   loadGuests();
