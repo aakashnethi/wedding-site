@@ -271,3 +271,8 @@ function json_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
+
+// Run once from the Apps Script editor to confirm the Drive permission is granted.
+function authorizeDrive() {
+  DriveApp.getRootFolder();
+}
