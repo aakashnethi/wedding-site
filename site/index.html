@@ -56,7 +56,7 @@
   .hero {
     min-height: 100vh; min-height: 100svh;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    text-align: center; padding: 80px 0 60px; position: relative;
+    text-align: center; padding: 80px 0 60px; position: relative; overflow: hidden;
   }
   .hero h1 {
     font-size: clamp(3rem, 12vw, 6rem); line-height: 1; margin: 18px 0 10px;
@@ -394,7 +394,16 @@
   /* ---------- Phones ---------- */
   @media (max-width: 600px) {
     main { padding: 0 16px; }
+    main > *, section, .card, .event, .couple-card { min-width: 0; max-width: 100%; }
     section { padding: 48px 0; }
+
+    /* Grid tracks must shrink to the screen; the default "1fr" can grow with its content. */
+    .events { grid-template-columns: minmax(0, 1fr); }
+    .couple { grid-template-columns: minmax(0, 1fr); }
+    .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .wall-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .hero { width: 100%; }
+    .hero h1 { max-width: 100%; font-size: clamp(2.2rem, 11vw, 3.2rem); overflow-wrap: anywhere; }
     section, header[id] { scroll-margin-top: 64px; }
 
     .topnav { flex-direction: row; padding: 8px 10px; gap: 0; }
