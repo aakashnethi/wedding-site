@@ -391,6 +391,51 @@
     .countdown div { min-width: 66px; padding: 12px; }
   }
 
+  /* ---------- Phones ---------- */
+  @media (max-width: 600px) {
+    main { padding: 0 16px; }
+    section { padding: 48px 0; }
+    section, header[id] { scroll-margin-top: 64px; }
+
+    .topnav { flex-direction: row; padding: 8px 10px; gap: 0; }
+    .topnav.scrolled { padding-top: 6px; padding-bottom: 6px; }
+    .brand { display: none; }
+    .navlinks { width: 100%; }
+    .navlinks a { padding: 9px 12px; min-height: 40px; display: flex; align-items: center; }
+
+    .hero { min-height: auto; padding: 104px 0 48px; }
+    .hero h1 { font-size: clamp(2.6rem, 14vw, 3.6rem); }
+    .hero .dates { font-size: .95rem; }
+    .scroll-cue { display: none; }
+
+    .countdown { gap: 8px; margin-top: 28px; }
+    .countdown div { flex: 1 1 0; min-width: 0; padding: 12px 6px; border-radius: 14px; }
+    .countdown b { font-size: 1.7rem; }
+    .countdown small { font-size: .62rem; letter-spacing: .08em; }
+
+    .section-head { margin-bottom: 26px; }
+    .section-head h2 { font-size: clamp(1.8rem, 9vw, 2.2rem); }
+    .event { padding: 20px 18px; }
+    .event h3 { font-size: 1.6rem; }
+    .couple-card { padding: 26px 16px; }
+    .card { padding: 20px 16px; border-radius: 18px; }
+
+    .segmented label,
+    .chips label { min-height: 44px; display: flex; align-items: center; justify-content: center; }
+    .chips label { padding: 10px 14px; }
+    button.primary { min-height: 50px; }
+    .switch { align-items: flex-start; }
+    .switch .track { margin-top: 2px; }
+
+    .gallery figure:first-child { aspect-ratio: 4 / 3; }
+    .wall-grid { gap: 10px; }
+    .wall-tag { font-size: 1.3rem; flex-wrap: wrap; }
+    .wall-item figcaption { padding: 8px 10px; font-size: .85rem; }
+    .guests li { padding: 8px 12px; }
+    .lightbox { padding: 12px; }
+    footer { padding: 32px 0 40px; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
     .reveal { opacity: 1; transform: none; }
