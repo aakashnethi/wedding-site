@@ -180,6 +180,13 @@
   .wall-item figcaption { padding: 10px 12px; font-size: .9rem; }
   .wall-item figcaption small { display: block; color: var(--muted); font-size: .75rem; }
   .wall-empty { color: var(--muted); text-align: center; margin: 0; }
+  .wall-more { text-align: center; margin-top: 8px; }
+  .wall-more button {
+    font: inherit; font-size: .95rem; color: var(--maroon); background: none; cursor: pointer;
+    border: 1.5px solid var(--maroon); border-radius: 999px; padding: 10px 22px; min-height: 44px;
+    transition: background .3s, color .3s;
+  }
+  .wall-more button:hover { background: var(--maroon); color: #fff; }
 
   /* ---------- RSVP ---------- */
   .card {
@@ -782,27 +789,36 @@
   }
 
   // Groups photos by hashtag. Untagged photos go under "#moments".
-  function renderWall(photos = []) {
+  // Shows the wall in pages of 12 photos to keep image requests low.
+  // Grid thumbnails are 480px; the full size loads only when a photo is opened.
+  const WALL_PAGE = 12;
+  let wallPhotos = [];
+  let wallShown = WALL_PAGE;
+
+  function renderWall(photos) {
+    if (photos) wallPhotos = photos;
     const wall = $("wall");
-    if (!photos.length) {
+    if (!wallPhotos.length) {
       wall.innerHTML = '<p class="wall-empty">No photos yet. Be the first to share one above!</p>';
       return;
     }
+    const visible = wallPhotos.slice(0, wallShown);
     const groups = new Map();
-    photos.forEach(p => {
+    visible.forEach(p => {
       const key = p.hashtag ? p.hashtag.toLowerCase() : "";
       if (!groups.has(key)) {
         groups.set(key, { label: p.hashtag ? `#${p.hashtag}` : "#moments", items: [] });
       }
       groups.get(key).items.push(p);
     });
+    const remaining = wallPhotos.length - visible.length;
     wall.innerHTML = [...groups.values()].map(g => `
       <div class="wall-group">
         <h3 class="wall-tag">${escapeHTML(g.label)} <small>${g.items.length} photo${g.items.length === 1 ? "" : "s"}</small></h3>
         <div class="wall-grid">
           ${g.items.map(p => `
             <figure class="wall-item" data-full="${escapeHTML(driveImage(p.url, 1600))}">
-              <img src="${escapeHTML(driveImage(p.thumb, 800))}" alt="${escapeHTML(p.caption || g.label)}" loading="lazy"
+              <img src="${escapeHTML(driveImage(p.thumb, 480))}" alt="${escapeHTML(p.caption || g.label)}" loading="lazy"
                    onerror="this.parentElement.classList.add('no-image')">
               <figcaption>
                 ${p.caption ? escapeHTML(p.caption) : ""}
@@ -810,11 +826,18 @@
               </figcaption>
             </figure>`).join("")}
         </div>
-      </div>`).join("");
+      </div>`).join("") + (remaining > 0
+        ? `<div class="wall-more"><button type="button" id="wallMore">Show ${Math.min(remaining, WALL_PAGE)} more photos</button></div>`
+        : "");
   }
 
   // Opens a wall photo in the lightbox.
   $("wall").addEventListener("click", (e) => {
+    if (e.target.closest("#wallMore")) {
+      wallShown += WALL_PAGE;
+      renderWall();
+      return;
+    }
     const fig = e.target.closest(".wall-item");
     if (!fig) return;
     $("lightboxImg").src = fig.dataset.full;
