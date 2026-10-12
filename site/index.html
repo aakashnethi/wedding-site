@@ -172,6 +172,11 @@
     width: 100%; aspect-ratio: 1; object-fit: cover; display: block;
     background: linear-gradient(135deg, #f9d9c4, #f4c9d2 55%, #fbe3b0);
   }
+  .wall-item.no-image img { display: none; }
+  .wall-item.no-image::before {
+    content: ""; display: block; aspect-ratio: 1;
+    background: linear-gradient(135deg, #f9d9c4, #f4c9d2 55%, #fbe3b0);
+  }
   .wall-item figcaption { padding: 10px 12px; font-size: .9rem; }
   .wall-item figcaption small { display: block; color: var(--muted); font-size: .75rem; }
   .wall-empty { color: var(--muted); text-align: center; margin: 0; }
@@ -696,7 +701,8 @@
         <div class="wall-grid">
           ${g.items.map(p => `
             <figure class="wall-item" data-full="${escapeHTML(driveImage(p.url, 1600))}">
-              <img src="${escapeHTML(driveImage(p.thumb, 800))}" alt="${escapeHTML(p.caption || g.label)}" loading="lazy">
+              <img src="${escapeHTML(driveImage(p.thumb, 800))}" alt="${escapeHTML(p.caption || g.label)}" loading="lazy"
+                   onerror="this.parentElement.classList.add('no-image')">
               <figcaption>
                 ${p.caption ? escapeHTML(p.caption) : ""}
                 <small>${escapeHTML(p.uploader || "A guest")} · ${escapeHTML(p.event)}</small>

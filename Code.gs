@@ -24,7 +24,8 @@ function getSheet_() {
 }
 
 const PHOTOS_SHEET = "Photos";
-const PHOTO_HEADERS = ["Timestamp", "Event", "Uploader", "Hashtag", "Caption", "File ID", "Show on site"];
+// Photo ID links each sheet row to its Drive file (it's also in the file name and description).
+const PHOTO_HEADERS = ["Timestamp", "Event", "Uploader", "Hashtag", "Caption", "File ID", "Show on site", "Photo ID", "Sharing"];
 
 function getPhotosSheet_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -118,17 +119,27 @@ function savePhoto_(data) {
     return json_({ ok: false, error: "Photo missing or too large" });
   }
 
+  const photoId = Utilities.getUuid().slice(0, 8);
   const event = EVENTS.includes(data.event) ? data.event : "Other";
   const uploader = String(data.name || "guest").replace(/[^\w ]/g, "").trim().slice(0, 40) || "guest";
   const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyyMMdd-HHmmss");
-  const blob = Utilities.newBlob(bytes, "image/jpeg", `${event} - ${uploader} - ${stamp}.jpg`);
+  const blob = Utilities.newBlob(bytes, "image/jpeg", `${photoId} - ${event} - ${uploader} - ${stamp}.jpg`);
 
   const hashtag = normalizeTag_(data.hashtag);
   const caption = String(data.caption || "").trim().slice(0, 140);
 
+  // The sheet row is written as soon as the file exists, so a sharing problem can't lose the photo.
   const file = DriveApp.getFolderById(folderId).createFile(blob);
-  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  getPhotosSheet_().appendRow([new Date(), event, uploader, hashtag, caption, file.getId(), "Yes"]);
+  file.setDescription(`Photo ID: ${photoId}`);
+  let sharing = "Yes";
+  try {
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (err) {
+    sharing = "Not shared";
+  }
+  getPhotosSheet_().appendRow([
+    new Date(), event, uploader, hashtag, caption, file.getId(), "Yes", photoId, sharing,
+  ]);
 
   return json_({ ok: true });
 }
