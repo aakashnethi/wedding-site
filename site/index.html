@@ -668,6 +668,13 @@
     setTimeout(() => box.remove(), 1400);
   }
 
+  // Drive's thumbnail links redirect; this builds the direct image URL instead,
+  // so the browser doesn't need to follow the redirect.
+  function driveImage(url, size) {
+    const id = new URL(url).searchParams.get("id");
+    return `https://lh3.googleusercontent.com/d/${id}=w${size}`;
+  }
+
   // Groups photos by hashtag. Untagged photos go under "#moments".
   function renderWall(photos = []) {
     const wall = $("wall");
@@ -688,8 +695,8 @@
         <h3 class="wall-tag">${escapeHTML(g.label)} <small>${g.items.length} photo${g.items.length === 1 ? "" : "s"}</small></h3>
         <div class="wall-grid">
           ${g.items.map(p => `
-            <figure class="wall-item" data-full="${escapeHTML(p.url)}">
-              <img src="${escapeHTML(p.thumb)}" alt="${escapeHTML(p.caption || g.label)}" loading="lazy">
+            <figure class="wall-item" data-full="${escapeHTML(driveImage(p.url, 1600))}">
+              <img src="${escapeHTML(driveImage(p.thumb, 800))}" alt="${escapeHTML(p.caption || g.label)}" loading="lazy">
               <figcaption>
                 ${p.caption ? escapeHTML(p.caption) : ""}
                 <small>${escapeHTML(p.uploader || "A guest")} · ${escapeHTML(p.event)}</small>
