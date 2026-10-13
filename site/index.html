@@ -128,42 +128,29 @@
   }
 
   /* ---------- Gallery ---------- */
-  /* Moments, framed gallery: square portraits in thin gold frames with a white mat,
-     hung on a soft ivory wall. */
-  .gallery {
-    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 26px 18px; padding: 16px 12px;
-    background: radial-gradient(120% 80% at 50% 0%, #fffaf3, #f8efe4);
-    border-radius: 6px; border: 1px solid var(--line);
-  }
+  /* Moments, slow reveal: one large photo at a time. Each fades in from a blur and
+     settles from a slight zoom as it scrolls into view. Dots track the current photo. */
+  .gallery { display: flex; flex-direction: column; gap: 56px; padding: 8px 0; }
   .gallery figure {
-    margin: 0; position: relative; cursor: zoom-in;
-    padding: 10px; background: #fffdf9;
-    border: 1px solid #d8b47a;
-    box-shadow: 0 1px 0 rgba(255, 255, 255, .8) inset, 0 16px 26px -20px rgba(60, 30, 30, .45);
-    transition: transform .6s var(--ease), box-shadow .6s var(--ease);
+    margin: 0; position: relative; cursor: zoom-in; overflow: hidden;
+    aspect-ratio: 4 / 5; border-radius: 22px; background: #f3e6da;
+    opacity: 0; transform: scale(1.08); filter: blur(8px);
+    transition: opacity 1.2s var(--ease), transform 1.8s var(--ease), filter 1.2s var(--ease);
   }
-  .gallery figure:nth-child(1) { grid-column: span 2; padding: 14px; }
-  .gallery figure:hover { transform: translateY(-4px); box-shadow: 0 24px 34px -20px rgba(60, 30, 30, .5); }
-  .gallery figure::before {
-    /* the gold inner keyline of the frame */
-    content: ""; position: absolute; inset: 4px; pointer-events: none;
-    border: 1px solid rgba(233, 162, 59, .55);
-  }
-  .gallery figure > * { display: block; }
-  .gallery figure img, .gallery figure span {
-    width: 100%; aspect-ratio: 1; object-fit: cover;
-  }
-  .gallery figure:nth-child(1) img, .gallery figure:nth-child(1) span { aspect-ratio: 16 / 10; }
+  .gallery figure.in { opacity: 1; transform: scale(1); filter: blur(0); }
+  .gallery figure:nth-child(1) { aspect-ratio: 16 / 11; }
+  .gallery img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .gallery figure img + span { display: none; }
   .gallery figure span {
-    display: grid; place-items: center; background: #f6ebe0;
-    font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 1.2rem; color: var(--maroon);
+    position: absolute; inset: 0; display: grid; place-items: center;
+    font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 1.3rem; color: var(--maroon);
   }
-  @media (max-width: 600px) {
-    .gallery { gap: 20px 12px; padding: 12px 8px; }
-    .gallery figure { padding: 8px; }
+  .gallery-dots { display: flex; justify-content: center; gap: 12px; margin-top: 26px; }
+  .gallery-dots button {
+    width: 10px; height: 10px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+    background: var(--line); transition: transform .4s var(--ease), background .4s;
   }
+  .gallery-dots button.on { background: var(--maroon); transform: scale(1.4); }
   .lightbox {
     position: fixed; inset: 0; z-index: 20; display: none; place-items: center;
     background: rgba(42, 26, 30, .85); padding: 20px; cursor: zoom-out;
@@ -689,11 +676,11 @@
       <h2>Moments</h2>
     </div>
     <div class="gallery">
-      <figure class="reveal" data-src="photos/photo1.jpg"><img src="photos/photo1.jpg" alt="Rishika and Akshay" loading="lazy" onerror="this.remove()"><span>Photo 1</span></figure>
-      <figure class="reveal" data-src="photos/photo2.jpg"><img src="photos/photo2.jpg" alt="Rishika and Akshay" loading="lazy" onerror="this.remove()"><span>Photo 2</span></figure>
-      <figure class="reveal" data-src="photos/photo3.jpg"><img src="photos/photo3.jpg" alt="Rishika and Akshay" loading="lazy" onerror="this.remove()"><span>Photo 3</span></figure>
-      <figure class="reveal" data-src="photos/photo4.jpg"><img src="photos/photo4.jpg" alt="Rishika and Akshay" loading="lazy" onerror="this.remove()"><span>Photo 4</span></figure>
-      <figure class="reveal" data-src="photos/photo5.jpg"><img src="photos/photo5.jpg" alt="Rishika and Akshay" loading="lazy" onerror="this.remove()"><span>Photo 5</span></figure>
+      <figure data-src="photos/photo1.jpg"><img src="photos/photo1.jpg" alt="Rishika and Akshay" loading="lazy" onerror="this.remove()"><span>Photo 1</span></figure>
+      <figure data-src="photos/photo2.jpg"><img src="photos/photo2.jpg" alt="Rishika and Akshay" loading="lazy" onerror="this.remove()"><span>Photo 2</span></figure>
+      <figure data-src="photos/photo3.jpg"><img src="photos/photo3.jpg" alt="Rishika and Akshay" loading="lazy" onerror="this.remove()"><span>Photo 3</span></figure>
+      <figure data-src="photos/photo4.jpg"><img src="photos/photo4.jpg" alt="Rishika and Akshay" loading="lazy" onerror="this.remove()"><span>Photo 4</span></figure>
+      <figure data-src="photos/photo5.jpg"><img src="photos/photo5.jpg" alt="Rishika and Akshay" loading="lazy" onerror="this.remove()"><span>Photo 5</span></figure>
     </div>
   </section>
 
@@ -1252,6 +1239,28 @@
   lightbox.addEventListener("click", () => {
     lightbox.classList.remove("open");
     lightbox.setAttribute("aria-hidden", "true");
+  });
+
+  // Moments: each photo settles into view as it scrolls in, and the dots follow along.
+  const momentFrames = [...document.querySelectorAll(".gallery figure")];
+  const momentDots = document.createElement("div");
+  momentDots.className = "gallery-dots";
+  momentDots.innerHTML = momentFrames.map((_, i) => `<button type="button" aria-label="Photo ${i + 1}"></button>`).join("");
+  document.querySelector(".gallery").after(momentDots);
+  const setMomentDot = i => momentDots.querySelectorAll("button")
+    .forEach((b, j) => b.classList.toggle("on", j === i));
+  setMomentDot(0);
+  const momentObserver = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if (!en.isIntersecting) return;
+      en.target.classList.add("in");
+      setMomentDot(momentFrames.indexOf(en.target));
+    });
+  }, { threshold: 0.45 });
+  momentFrames.forEach(f => momentObserver.observe(f));
+  momentDots.addEventListener("click", (e) => {
+    const i = [...momentDots.children].indexOf(e.target.closest("button"));
+    if (i >= 0) momentFrames[i].scrollIntoView({ behavior: "smooth", block: "center" });
   });
 
   // Navigation: glass background after scrolling, and highlight the section in view.
