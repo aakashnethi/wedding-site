@@ -128,41 +128,41 @@
   }
 
   /* ---------- Gallery ---------- */
-  /* Moments, film strip: photos run along a dark strip with sprocket holes.
-     Swipe or scroll sideways; each frame snaps into place. */
+  /* Moments, framed gallery: square portraits in thin gold frames with a white mat,
+     hung on a soft ivory wall. */
   .gallery {
-    display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory;
-    scroll-behavior: smooth; scrollbar-width: none; -webkit-overflow-scrolling: touch;
-    padding: 30px 14px; border-radius: 6px; background-color: #2b2024;
-    background-image:
-      repeating-linear-gradient(90deg, #f3e6da 0 9px, transparent 9px 22px),
-      repeating-linear-gradient(90deg, #f3e6da 0 9px, transparent 9px 22px);
-    background-size: 100% 8px, 100% 8px;
-    background-position: left 10px top, left bottom 10px;
-    background-repeat: repeat-x, repeat-x;
-    background-attachment: local;
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 26px 18px; padding: 16px 12px;
+    background: radial-gradient(120% 80% at 50% 0%, #fffaf3, #f8efe4);
+    border-radius: 6px; border: 1px solid var(--line);
   }
-  .gallery::-webkit-scrollbar { display: none; }
   .gallery figure {
-    flex: 0 0 min(72vw, 300px); margin: 0; position: relative; cursor: zoom-in; overflow: hidden;
-    aspect-ratio: 4 / 5; background: #3a2e33; border-radius: 2px;
-    scroll-snap-align: center;
+    margin: 0; position: relative; cursor: zoom-in;
+    padding: 10px; background: #fffdf9;
+    border: 1px solid #d8b47a;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .8) inset, 0 16px 26px -20px rgba(60, 30, 30, .45);
+    transition: transform .6s var(--ease), box-shadow .6s var(--ease);
   }
-  .gallery figure:nth-child(1) { flex-basis: min(82vw, 380px); aspect-ratio: 4 / 5; }
-  .gallery img {
-    width: 100%; height: 100%; object-fit: cover; display: block;
-    transition: transform 1s var(--ease);
+  .gallery figure:nth-child(1) { grid-column: span 2; padding: 14px; }
+  .gallery figure:hover { transform: translateY(-4px); box-shadow: 0 24px 34px -20px rgba(60, 30, 30, .5); }
+  .gallery figure::before {
+    /* the gold inner keyline of the frame */
+    content: ""; position: absolute; inset: 4px; pointer-events: none;
+    border: 1px solid rgba(233, 162, 59, .55);
   }
-  .gallery figure:hover img { transform: scale(1.04); }
-  .gallery img + span { display: none; }
+  .gallery figure > * { display: block; }
+  .gallery figure img, .gallery figure span {
+    width: 100%; aspect-ratio: 1; object-fit: cover;
+  }
+  .gallery figure:nth-child(1) img, .gallery figure:nth-child(1) span { aspect-ratio: 16 / 10; }
+  .gallery figure img + span { display: none; }
   .gallery figure span {
-    position: absolute; inset: 0; display: grid; place-items: center;
-    background: #3a2e33; color: #f3e6da;
-    font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 1.3rem; opacity: .8;
+    display: grid; place-items: center; background: #f6ebe0;
+    font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 1.2rem; color: var(--maroon);
   }
-  @media (min-width: 720px) {
-    .gallery figure { flex-basis: 300px; }
-    .gallery figure:nth-child(1) { flex-basis: 380px; }
+  @media (max-width: 600px) {
+    .gallery { gap: 20px 12px; padding: 12px 8px; }
+    .gallery figure { padding: 8px; }
   }
   .lightbox {
     position: fixed; inset: 0; z-index: 20; display: none; place-items: center;
