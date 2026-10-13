@@ -128,37 +128,41 @@
   }
 
   /* ---------- Gallery ---------- */
-  /* Moments, editorial grid: a large feature photo, then two columns of full-bleed
-     photos with sharp corners and a hairline rule beneath each. */
+  /* Moments, film strip: photos run along a dark strip with sprocket holes.
+     Swipe or scroll sideways; each frame snaps into place. */
   .gallery {
-    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px; padding: 4px 0;
+    display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory;
+    scroll-behavior: smooth; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    padding: 30px 14px; border-radius: 6px; background-color: #2b2024;
+    background-image:
+      repeating-linear-gradient(90deg, #f3e6da 0 9px, transparent 9px 22px),
+      repeating-linear-gradient(90deg, #f3e6da 0 9px, transparent 9px 22px);
+    background-size: 100% 8px, 100% 8px;
+    background-position: left 10px top, left bottom 10px;
+    background-repeat: repeat-x, repeat-x;
+    background-attachment: local;
   }
+  .gallery::-webkit-scrollbar { display: none; }
   .gallery figure {
-    margin: 0; position: relative; cursor: zoom-in; overflow: hidden;
-    aspect-ratio: 4 / 5; background: #f3e6da;
-    transition: opacity .6s var(--ease);
+    flex: 0 0 min(72vw, 300px); margin: 0; position: relative; cursor: zoom-in; overflow: hidden;
+    aspect-ratio: 4 / 5; background: #3a2e33; border-radius: 2px;
+    scroll-snap-align: center;
   }
-  .gallery figure:nth-child(1), .gallery figure:nth-child(5) { grid-column: span 2; aspect-ratio: 16 / 10; }
-  .gallery figure::after {
-    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
-    background: var(--marigold); transform: scaleX(.2); transform-origin: left;
-    transition: transform .7s var(--ease);
-  }
-  .gallery figure:hover::after { transform: scaleX(1); }
+  .gallery figure:nth-child(1) { flex-basis: min(82vw, 380px); aspect-ratio: 4 / 5; }
   .gallery img {
     width: 100%; height: 100%; object-fit: cover; display: block;
-    transition: transform 1.2s var(--ease);
+    transition: transform 1s var(--ease);
   }
   .gallery figure:hover img { transform: scale(1.04); }
   .gallery img + span { display: none; }
   .gallery figure span {
     position: absolute; inset: 0; display: grid; place-items: center;
-    background: #f3e6da;
-    font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 1.3rem; color: var(--maroon); opacity: .7;
+    background: #3a2e33; color: #f3e6da;
+    font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 1.3rem; opacity: .8;
   }
-  @media (max-width: 600px) {
-    .gallery { gap: 10px; }
+  @media (min-width: 720px) {
+    .gallery figure { flex-basis: 300px; }
+    .gallery figure:nth-child(1) { flex-basis: 380px; }
   }
   .lightbox {
     position: fixed; inset: 0; z-index: 20; display: none; place-items: center;
