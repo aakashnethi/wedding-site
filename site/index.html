@@ -890,6 +890,8 @@
       groups.get(key).items.push(p);
     });
     wallGroups = [...groups.values()];
+    // The five newest photos load right away; the others wait until they scroll into view.
+    const newest = new Set(wallPhotos.slice(0, 5));
     const remaining = wallPhotos.length - visible.length;
 
     // Each group is a stack: only the top photo loads; the cards behind are decoration.
@@ -900,7 +902,7 @@
           <span class="layer l3"></span>
           <span class="layer l2"></span>
           <span class="layer l1">
-            <img src="${escapeHTML(driveImage(g.items[0].thumb, 480))}" alt="" loading="lazy"
+            <img ${newest.has(g.items[0]) ? "src" : "data-src"}="${escapeHTML(driveImage(g.items[0].thumb, 480))}" alt="" loading="lazy"
                  onerror="this.parentElement.classList.add('broken')">
           </span>
           <span class="stack-count">${g.items.length}</span>
@@ -909,6 +911,7 @@
       </div>`).join("") + `</div>` + (remaining > 0
         ? `<div class="wall-more"><button type="button" id="wallMore">Show ${Math.min(remaining, WALL_PAGE)} more photos</button></div>`
         : "");
+
   }
 
   // Opens a wall photo in the lightbox.
@@ -919,7 +922,14 @@
       return;
     }
     const stack = e.target.closest(".stack");
-    if (stack) openCarousel(wallGroups[Number(stack.dataset.group)].items);
+    if (!stack) return;
+    // Older stacks load their cover image only when the user opens them.
+    const cover = stack.querySelector("img[data-src]");
+    if (cover) {
+      cover.src = cover.dataset.src;
+      cover.removeAttribute("data-src");
+    }
+    openCarousel(wallGroups[Number(stack.dataset.group)].items);
   });
 
   // Carousel for one stack. Only the photo on screen is requested, which keeps image requests low.
