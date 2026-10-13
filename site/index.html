@@ -128,22 +128,50 @@
   }
 
   /* ---------- Gallery ---------- */
-  .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  .gallery figure {
-    margin: 0; position: relative; overflow: hidden; border-radius: 16px; cursor: zoom-in;
-    aspect-ratio: 4 / 5; background: linear-gradient(135deg, #f9d9c4, #f4c9d2 55%, #fbe3b0);
-    box-shadow: 0 14px 30px -18px rgba(107, 31, 46, .45);
+  /* Scattered polaroids: each print is tilted, taped, and offset from its neighbours */
+  .gallery {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 30px 16px; padding: 6px 0;
   }
-  .gallery figure:first-child { grid-column: span 2; aspect-ratio: 16 / 10; }
+  .gallery figure {
+    --tilt: 3deg;
+    margin: 0; position: relative; cursor: zoom-in; border-radius: 4px;
+    background: #fffdf8; padding: 9px 9px 34px;
+    aspect-ratio: 4 / 5;
+    box-shadow: 0 18px 30px -18px rgba(60, 30, 30, .55);
+    rotate: var(--tilt);
+    transition: rotate .6s var(--ease), translate .6s var(--ease), box-shadow .6s var(--ease);
+  }
+  .gallery figure:nth-child(1) { --tilt: -1.5deg; grid-column: span 2; aspect-ratio: 16 / 10; }
+  .gallery figure:nth-child(2) { --tilt: 3deg; margin-top: 26px; }
+  .gallery figure:nth-child(3) { --tilt: -3deg; }
+  .gallery figure:nth-child(4) { --tilt: 2deg; margin-top: 26px; }
+  .gallery figure:nth-child(5) { --tilt: -2.5deg; grid-column: span 2; aspect-ratio: 16 / 9; margin-top: 8px; }
+  /* washi tape across the top of each print */
+  .gallery figure::before {
+    content: ""; position: absolute; top: -11px; left: 50%; z-index: 3;
+    width: 74px; height: 22px; margin-left: -37px; transform: rotate(-4deg);
+    background: rgba(233, 162, 59, .45); border-radius: 2px; box-shadow: 0 1px 2px rgba(0, 0, 0, .08);
+  }
+  .gallery figure:nth-child(even)::before { transform: rotate(5deg); background: rgba(201, 86, 107, .35); }
+  .gallery figure:hover {
+    rotate: 0deg; translate: 0 -8px; z-index: 2;
+    box-shadow: 0 30px 44px -22px rgba(60, 30, 30, .6);
+  }
   .gallery img {
-    width: 100%; height: 100%; object-fit: cover; display: block;
+    position: relative; width: 100%; height: 100%; object-fit: cover; display: block;
     transition: transform .8s var(--ease);
   }
-  .gallery figure:hover img { transform: scale(1.06); }
+  .gallery figure:hover img { transform: scale(1.03); }
   .gallery img + span { display: none; }
   .gallery figure span {
-    position: absolute; inset: 0; display: grid; place-items: center;
-    font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 1.3rem; color: var(--maroon); opacity: .6;
+    position: absolute; inset: 9px 9px 34px; display: grid; place-items: center;
+    background: linear-gradient(135deg, #f9d9c4, #f4c9d2 55%, #fbe3b0);
+    font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 1.3rem; color: var(--maroon); opacity: .7;
+  }
+  @media (max-width: 600px) {
+    .gallery { gap: 24px 12px; }
+    .gallery figure:nth-child(2), .gallery figure:nth-child(4) { margin-top: 18px; }
   }
   .lightbox {
     position: fixed; inset: 0; z-index: 20; display: none; place-items: center;
