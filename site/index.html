@@ -196,55 +196,28 @@
     border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent;
   }
   .stack:focus-visible { outline: 3px solid rgba(201, 86, 107, .45); outline-offset: 8px; border-radius: 16px; }
-  /* Polaroid cards: cream frame with a deeper bottom edge, like printed film. */
   .layer {
-    position: absolute; inset: 0; display: flex; flex-direction: column;
-    padding: 8px 8px 30px; border-radius: 4px;
-    background: #fffdf8;
-    box-shadow: 0 14px 24px -14px rgba(60, 30, 30, .55);
+    position: absolute; inset: 0; overflow: hidden; border-radius: 16px;
+    background: var(--card); border: 1px solid var(--line);
+    box-shadow: 0 12px 26px -16px rgba(107, 31, 46, .5);
     transition: transform .5s var(--ease);
   }
-  .layer.l3 { transform: translate(13px, -13px) rotate(8deg); background: #ecd6bb; }
-  .layer.l2 { transform: translate(7px, -7px) rotate(4deg); background: #f6e6d3; }
-  .layer.l1::before {
-    content: ""; position: absolute; inset: 8px 8px 30px;
-    background: linear-gradient(135deg, #f9d9c4, #f4c9d2 55%, #fbe3b0);
-  }
-  .layer.l1 img { position: relative; flex: 1; min-height: 0; width: 100%; object-fit: cover; display: block; }
+  .layer.l3 { transform: translate(10px, -10px) rotate(6deg); background: #fbe3b0; }
+  .layer.l2 { transform: translate(5px, -5px) rotate(3deg); background: #f4c9d2; }
+  .layer.l1 { background: linear-gradient(135deg, #f9d9c4, #f4c9d2 55%, #fbe3b0); }
+  .layer.l1 img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .layer.broken img { display: none; }
-  .stack:hover .layer.l1 { transform: translateY(-5px) rotate(-1.5deg); }
+  .stack:hover .layer.l1 { transform: translateY(-4px) rotate(-1.5deg); }
   .stack:hover .layer.l2 { transform: translate(8px, -8px) rotate(4.5deg); }
   .stack:hover .layer.l3 { transform: translate(14px, -14px) rotate(8deg); }
-  /* Washi tape across the top of each pile */
-  .stack::after {
-    content: ""; position: absolute; top: -12px; left: 50%; z-index: 6;
-    width: 70px; height: 22px; margin-left: -35px; transform: rotate(-4deg);
-    background: rgba(233, 162, 59, .42); border-radius: 2px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, .08);
-  }
-  /* Each pile drops in, one after another, tilted a little differently */
-  .stack-wrap {
-    transform: rotate(var(--r, 0deg));
-    animation: pile-in .8s var(--ease) both;
-    animation-delay: var(--d, 0ms);
-  }
-  @keyframes pile-in {
-    from { opacity: 0; transform: translateY(26px) rotate(calc(var(--r, 0deg) + 7deg)); }
-    to   { opacity: 1; transform: rotate(var(--r, 0deg)); }
-  }
-  .wall-hint { text-align: center; color: var(--muted); font-size: .9rem; margin: -8px 0 26px; letter-spacing: .04em; }
   .stack-count {
     position: absolute; top: -8px; right: -8px; z-index: 5; min-width: 28px; height: 28px; padding: 0 8px;
     display: grid; place-items: center; border-radius: 999px; background: var(--maroon); color: #fff;
     font-size: .8rem; box-shadow: 0 6px 14px -6px rgba(107, 31, 46, .6);
   }
   .stack-label {
-    margin-top: 18px; font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 1.4rem;
-    color: var(--maroon); overflow-wrap: anywhere; line-height: 1.2;
-  }
-  .stack-label small {
-    display: block; margin-top: 4px; font-family: "Inter", system-ui, sans-serif; font-style: normal;
-    font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--rose);
+    margin-top: 16px; font-family: "Cormorant Garamond", serif; font-size: 1.25rem; color: var(--maroon);
+    overflow-wrap: anywhere;
   }
 
   /* Carousel */
@@ -254,29 +227,13 @@
     background: rgba(32, 20, 24, .94);
   }
   .carousel[hidden] { display: none; }
-  /* Blurred copy of the open photo behind the carousel */
-  .carousel { isolation: isolate; }
-  .carousel::before {
-    content: ""; position: absolute; inset: -40px; z-index: -1;
-    background: var(--bg, none) center / cover no-repeat;
-    filter: blur(32px) brightness(.5) saturate(1.2);
-    transition: background-image .4s;
-  }
   .car-stage {
     width: 100%; max-width: 900px; flex: 1; min-height: 0;
     display: grid; place-items: center; touch-action: pan-y; user-select: none;
   }
-  /* The open photo is shown as a polaroid, dealt onto the screen */
   .car-stage img {
-    max-width: 100%; max-height: 66vh; object-fit: contain;
-    padding: 10px 10px 42px; background: #fffdf8; border-radius: 4px;
-    box-shadow: 0 34px 60px -22px rgba(0, 0, 0, .7);
-    transform: rotate(-1.5deg);
-  }
-  .car-stage img.deal { animation: deal .55s var(--ease) both; }
-  @keyframes deal {
-    from { opacity: 0; transform: translateX(46px) rotate(5deg) scale(.96); }
-    to   { opacity: 1; transform: rotate(-1.5deg); }
+    max-width: 100%; max-height: 70vh; object-fit: contain; border-radius: 14px;
+    box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .6); animation: fade .35s var(--ease);
   }
   .car-btn {
     position: absolute; top: 50%; transform: translateY(-50%); width: 46px; height: 46px; border-radius: 50%;
@@ -938,8 +895,8 @@
     const remaining = wallPhotos.length - visible.length;
 
     // Each group is a stack: only the top photo loads; the cards behind are decoration.
-    wall.innerHTML = `<p class="wall-hint">Tap a pile to flip through its photos</p><div class="stacks">` + wallGroups.map((g, i) => `
-      <div class="stack-wrap" style="--r:${((i * 37) % 9) - 4}deg;--d:${i * 90}ms">
+    wall.innerHTML = `<div class="stacks">` + wallGroups.map((g, i) => `
+      <div class="stack-wrap">
         <button type="button" class="stack" data-group="${i}"
                 aria-label="Open ${escapeHTML(g.label)}, ${g.items.length} photo${g.items.length === 1 ? "" : "s"}">
           <span class="layer l3"></span>
@@ -950,7 +907,7 @@
           </span>
           <span class="stack-count">${g.items.length}</span>
         </button>
-        <div class="stack-label">${escapeHTML(g.label)}<small>${g.items.length} photo${g.items.length === 1 ? "" : "s"}</small></div>
+        <div class="stack-label">${escapeHTML(g.label)}</div>
       </div>`).join("") + `</div>` + (remaining > 0
         ? `<div class="wall-more"><button type="button" id="wallMore">Show ${Math.min(remaining, WALL_PAGE)} more photos</button></div>`
         : "");
@@ -986,10 +943,6 @@
     const p = carItems[carIndex];
     carImg.src = driveImage(p.url, 1600);
     carImg.alt = p.caption || "Guest photo";
-    carousel.style.setProperty("--bg", `url("${carImg.src}")`);
-    carImg.classList.remove("deal");
-    void carImg.offsetWidth; // restart the deal animation for each photo
-    carImg.classList.add("deal");
     $("carCaption").textContent = p.caption || "";
     $("carInfo").textContent = `${carIndex + 1} / ${carItems.length} · ${p.uploader || "A guest"} · ${p.event}`;
   }
