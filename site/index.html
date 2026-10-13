@@ -128,29 +128,42 @@
   }
 
   /* ---------- Gallery ---------- */
-  /* Moments, slow reveal: one large photo at a time. Each fades in from a blur and
-     settles from a slight zoom as it scrolls into view. Dots track the current photo. */
-  .gallery { display: flex; flex-direction: column; gap: 56px; padding: 8px 0; }
-  .gallery figure {
-    margin: 0; position: relative; cursor: zoom-in; overflow: hidden;
-    aspect-ratio: 4 / 5; border-radius: 22px; background: #f3e6da;
-    opacity: 0; transform: scale(1.08); filter: blur(8px);
-    transition: opacity 1.2s var(--ease), transform 1.8s var(--ease), filter 1.2s var(--ease);
+  /* Moments, film strip: photos run along a dark strip with sprocket holes.
+     Swipe or scroll sideways; each frame snaps into place. */
+  .gallery {
+    display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory;
+    scroll-behavior: smooth; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    padding: 30px 14px; border-radius: 6px; background-color: #2b2024;
+    background-image:
+      repeating-linear-gradient(90deg, #f3e6da 0 9px, transparent 9px 22px),
+      repeating-linear-gradient(90deg, #f3e6da 0 9px, transparent 9px 22px);
+    background-size: 100% 8px, 100% 8px;
+    background-position: left 10px top, left bottom 10px;
+    background-repeat: repeat-x, repeat-x;
+    background-attachment: local;
   }
-  .gallery figure.in { opacity: 1; transform: scale(1); filter: blur(0); }
-  .gallery figure:nth-child(1) { aspect-ratio: 16 / 11; }
-  .gallery img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .gallery::-webkit-scrollbar { display: none; }
+  .gallery figure {
+    flex: 0 0 min(72vw, 300px); margin: 0; position: relative; cursor: zoom-in; overflow: hidden;
+    aspect-ratio: 4 / 5; background: #3a2e33; border-radius: 2px;
+    scroll-snap-align: center;
+  }
+  .gallery figure:nth-child(1) { flex-basis: min(82vw, 380px); aspect-ratio: 4 / 5; }
+  .gallery img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    transition: transform 1s var(--ease);
+  }
+  .gallery figure:hover img { transform: scale(1.04); }
   .gallery figure img + span { display: none; }
   .gallery figure span {
     position: absolute; inset: 0; display: grid; place-items: center;
-    font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 1.3rem; color: var(--maroon);
+    background: #3a2e33; color: #f3e6da;
+    font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 1.3rem; opacity: .8;
   }
-  .gallery-dots { display: flex; justify-content: center; gap: 12px; margin-top: 26px; }
-  .gallery-dots button {
-    width: 10px; height: 10px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
-    background: var(--line); transition: transform .4s var(--ease), background .4s;
+  @media (min-width: 720px) {
+    .gallery figure { flex-basis: 300px; }
+    .gallery figure:nth-child(1) { flex-basis: 380px; }
   }
-  .gallery-dots button.on { background: var(--maroon); transform: scale(1.4); }
   .lightbox {
     position: fixed; inset: 0; z-index: 20; display: none; place-items: center;
     background: rgba(42, 26, 30, .85); padding: 20px; cursor: zoom-out;
@@ -1239,28 +1252,6 @@
   lightbox.addEventListener("click", () => {
     lightbox.classList.remove("open");
     lightbox.setAttribute("aria-hidden", "true");
-  });
-
-  // Moments: each photo settles into view as it scrolls in, and the dots follow along.
-  const momentFrames = [...document.querySelectorAll(".gallery figure")];
-  const momentDots = document.createElement("div");
-  momentDots.className = "gallery-dots";
-  momentDots.innerHTML = momentFrames.map((_, i) => `<button type="button" aria-label="Photo ${i + 1}"></button>`).join("");
-  document.querySelector(".gallery").after(momentDots);
-  const setMomentDot = i => momentDots.querySelectorAll("button")
-    .forEach((b, j) => b.classList.toggle("on", j === i));
-  setMomentDot(0);
-  const momentObserver = new IntersectionObserver(entries => {
-    entries.forEach(en => {
-      if (!en.isIntersecting) return;
-      en.target.classList.add("in");
-      setMomentDot(momentFrames.indexOf(en.target));
-    });
-  }, { threshold: 0.45 });
-  momentFrames.forEach(f => momentObserver.observe(f));
-  momentDots.addEventListener("click", (e) => {
-    const i = [...momentDots.children].indexOf(e.target.closest("button"));
-    if (i >= 0) momentFrames[i].scrollIntoView({ behavior: "smooth", block: "center" });
   });
 
   // Navigation: glass background after scrolling, and highlight the section in view.
